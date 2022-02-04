@@ -23,7 +23,7 @@
 /******************************************************Global variables*****************************************************************/
 /*Bluetooth service*/
 BLEService PMservice("ef12c126-80cf-11ec-a8a3-0242ac120002"); // create service
-BLECharacteristic PMCharacteristic("76b0499a-80ea-11ec-a8a3-0242ac120002", BLERead | BLENotify, "stringValue"); //characteristic for PM sensor 1 and 2
+BLECharacteristic PMCharacteristic("76b0499a-80ea-11ec-a8a3-0242ac120002", BLERead | BLENotify, "stringValue"); //characteristic for PM value
 BLECharacteristic FreqCharacteristic("36612c92-80ea-11ec-a8a3-0242ac120002", BLEWrite, "stringValue"); //characteristic for change frequency
 
 /*Sensor variables*/
