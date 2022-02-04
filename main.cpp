@@ -211,6 +211,8 @@ void loop() {
       Serial.println(central.address());
     } 
 
+    /*to be implemented */
+    /*set back to defualt(no ble connection frequency*/
     detecting();
     writeDataToSD();
     
