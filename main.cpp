@@ -102,6 +102,9 @@ inline void updateFrequency(){
   Serial.println(opFreq);
 }
 
+void writeDataToSD(){
+    /*to be implemented*/
+}
 
 inline void serialize(){
   
@@ -164,7 +167,7 @@ void detecting(){
     delay(3000);
     Serial.println("Off delay complete");
 
-    sendData();
+    writeDataToSD();
     printData();
 
 }
@@ -200,11 +203,17 @@ void loop() {
         }else{
           //send data out to smartphone
           detecting();
+          sendData();
         }
       }
       //after connection is finished
       Serial.println("Bluetooth disconected from central:");
       Serial.println(central.address());
     } 
+
+    detecting();
+    writeDataToSD();
+    
+
 
 }
