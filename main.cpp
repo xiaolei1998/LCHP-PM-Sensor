@@ -17,8 +17,7 @@
 #define BLUE 27
 #define LEDDelay 280  //delay some time for value to stablize
 #define ReadDelay 40  //time delayed after read;
-#define LEDOffTime 100 //time when LED is off
-
+#define defualtLEDDelay 2999680
 
 /******************************************************Global variables*****************************************************************/
 /*Bluetooth service*/
@@ -33,7 +32,8 @@ BLECharacteristic FreqCharacteristic("36612c92-80ea-11ec-a8a3-0242ac120002", BLE
 
 float roughPM = 0;
 
-int opFreq = 0; // reading frequency
+// int readInterval = 3; // reading interval (one read per how many seconds)
+long LEDOffDelay = defualtLEDDelay; // LED off time. Initialized to 2999680 us (3s - 320us), 320us comes from sensor LED on delay + read delay
 
 /*Bluetooth send out string*/
 char serialPM[STRINGSIZE] = {0};
@@ -78,6 +78,7 @@ void setup() {
     BLE.setLocalName("PM sensor");
     //set advertised service as PMservice
     BLE.setAdvertisedService(PMservice);
+    Serial.println("PMsensor active, waiting for connections...");
 
     PMservice.addCharacteristic(PMCharacteristic);
     PMservice.addCharacteristic(FreqCharacteristic);
@@ -94,28 +95,64 @@ void setup() {
 /********************************************Methods************************************************/
 
 /*Change the PM sensor reading freqeuncy to request frequency*/
-inline void updateFrequency(){
-  char requestFreq[12] = {0};
-  FreqCharacteristic.readValue((void *)requestFreq,10);
-  opFreq = atoi(requestFreq);
-  Serial.print("Current operating Frequency => ");
-  Serial.println(opFreq);
+inline void updateReadInterval(){
+  Serial.println("");
+  char inputInterval[10] = {0};
+  FreqCharacteristic.readValue((void *)inputInterval,10);
+  Serial.println("input interval = " + String(inputInterval) + "s        ");
+  //readInterval = atoi(inputInterval);
+  LEDOffDelay = (atoi(inputInterval) * 1000000) - 320;
+  Serial.print("Current read interval = " + String((LEDOffDelay + 320)/(1000000)) + "s        ");
+  Serial.print("Current off delay = " + String(LEDOffDelay) + "us");
+  Serial.println("");
+  Serial.println("");
 }
 
+
+/*print values to serial port*/
+void printData(){
+    //convert then store the read analog voltage to physical PM density for each sensor, print both values to serial port
+    for (int i=1; i<4; i++){
+    Serial.print("PM" + String(i) + " Voltage = " + String(PMD.PMAnalog[i-1]) + "V ");
+    Serial.print("PM" + String(i) + " Density = " + String(PMD.PMPhys[i-1]) + "ug/m3 ");
+    }
+    Serial.println("");
+    Serial.println("Avergaed PM = " + String(roughPM) + "ug/m3 ");
+    //Serial.println("");
+    
+}
+
+
+/*write data to SD card*/
 void writeDataToSD(){
     /*to be implemented*/
 }
 
+
+/*serialize the data so that it could be send through BLE*/
 inline void serialize(){
-  
   sprintf(serialPM,"%f",roughPM);
+}
+
+
+/*algorithm for PM conversion*/
+void calcPM(){
+
+  for(int i = 0; i < 3; i++){
+    PMD.PMPhys[i] = float(((PMD.PMAnalog[i]/1024) - 0.0356)*12000*0.035);
+    PMD.PMAnalog[i] = PMD.PMAnalog[i]/1024*5;
+    roughPM = PMD.PMPhys[i] + roughPM;
+  }
+
+  roughPM = roughPM/3;
+  printData();
+
 }
 
 
 /*Send sensor's value out to smartphone*/
 void sendData(){
 
-  calcPM();
   serialize();
   
   PMCharacteristic.writeValue(serialPM);
@@ -123,39 +160,35 @@ void sendData(){
   memset(serialPM, '0',STRINGSIZE);
 }
 
-void calcPM(){
 
-  for(int i = 0; i < 3; i++){
-    roughPM = PMD.PMPhys[i] + roughPM;
-  }
 
-  roughPM = roughPM/3;
-}
-
-void detecting(){
+/*Activate and read values from the sensor*/
+void sense(){
     //turn sensor LED on, according to manual, optimum pulsewidth is 32ms
     digitalWrite(LEDControl1,HIGH);
     digitalWrite(LEDControl2,HIGH);
     digitalWrite(LEDControl3,HIGH);
     delayMicroseconds(LEDDelay);
-    Serial.println("LED ON");
+    //Serial.println("LED ON");
 
     //read photodiode value at 28ms (peak value according to manual)
     PMD.PMAnalog[0] = analogRead(PM1);
     PMD.PMAnalog[1] = analogRead(PM2);
     PMD.PMAnalog[2] = analogRead(PM3);
-    Serial.println("Read complete");
+    //Serial.println("Read complete");
 
     //let sensor LED stay on for another 4ms to complete the 32ms pulse
     delayMicroseconds(ReadDelay);
-    Serial.println("Read delay complete");
+    //Serial.println("Read delay complete");
 
     //turn sensor LED off, light up onboard LED to indicate that a read is complete
     digitalWrite(LEDControl1,LOW);
     digitalWrite(LEDControl2,LOW);
     digitalWrite(LEDControl3,LOW);
-    Serial.println("LED Off");
+    //Serial.println("LED Off");
 
+    calcPM();
+    writeDataToSD();
 
     //turning on-board LED on and off to indicate a read has finished. WiFiDrv::analogWrite does not work, maybe in conflict with BLE library 
     /*WiFiDrv::analogWrite(RED, 255);
@@ -164,27 +197,18 @@ void detecting(){
     delayMicroseconds(5680);*/
 
     //delay for sensor LED = off
-    delay(3000);
-    Serial.println("Off delay complete");
-
-    writeDataToSD();
-    printData();
-
+    delayMicroseconds(LEDOffDelay);
+    //Serial.println("Off delay complete");
 }
 
-void printData(){
-    //convert then store the read analog voltage to physical PM density for each sensor, print both values to serial port
-    for (int i=1; i<4; i++){
-    PMD.PMPhys[i-1] = float(((PMD.PMAnalog[i-1]/1024) - 0.0356)*12000*0.035);
-    Serial.print("PM" + String(i) + " Voltage = " + String(PMD.PMAnalog[i-1]/1024*5) + "V ");
-    Serial.print("PM" + String(i) + " Density = " + String(PMD.PMPhys[i-1]) + "ug/m3 ");
-    }
-    Serial.println("");
-}
 
 /*********************************************Main loop***************************************************/
 
 void loop() {
+
+    /*to be implemented */
+    /*set back to defualt(no ble connection frequency*/
+    sense();
 
     //listen for BLE peripheral devices to connect
     BLEDevice central = BLE.central();
@@ -192,30 +216,33 @@ void loop() {
     // if a central is connected to smartphone
     if (central) {
       //print central's MAC address
-      Serial.print("Connected to central: ");
+      Serial.println("");
+      Serial.print("**************Connected to central: ");
       Serial.println(central.address());
+      Serial.println("");
 
       // When arduino is still connected to smartphone
       while (central.connected()) {
         
         if (FreqCharacteristic.written()) {
-          updateFrequency();
+          updateReadInterval();
         }else{
           //send data out to smartphone
-          detecting();
+          sense();
           sendData();
+          roughPM = 0;
+          Serial.println("");
         }
       }
       //after connection is finished
-      Serial.println("Bluetooth disconected from central:");
+      Serial.println("************Bluetooth disconected from central:");
       Serial.println(central.address());
-    } 
+    }
+    else{
+      Serial.println("Central not connected");
+    }
 
-    /*to be implemented */
-    /*set back to defualt(no ble connection frequency*/
-    detecting();
-    writeDataToSD();
-    
-
+    LEDOffDelay = defualtLEDDelay;
+    roughPM = 0; 
 
 }
