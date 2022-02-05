@@ -17,6 +17,7 @@
 #define BLUE 27
 #define LEDDelay 280  //delay some time for value to stablize
 #define ReadDelay 40  //time delayed after read;
+#define defualtLEDDelay 2999680
 
 
 /******************************************************Global variables*****************************************************************/
@@ -33,7 +34,7 @@ BLECharacteristic FreqCharacteristic("36612c92-80ea-11ec-a8a3-0242ac120002", BLE
 float roughPM = 0;
 
 // int readInterval = 3; // reading interval (one read per how many seconds)
-long LEDOffDelay = 2999680; // LED off time. Initialized to 2999680 us (3s - 320us), 320us comes from sensor LED on delay + read delay
+long LEDOffDelay = defualtLEDDelay; // LED off time. Initialized to 2999680 us (3s - 320us), 320us comes from sensor LED on delay + read delay
 
 /*Bluetooth send out string*/
 char serialPM[STRINGSIZE] = {0};
@@ -217,7 +218,7 @@ void loop() {
     if (central) {
       //print central's MAC address
       Serial.println("");
-      Serial.print("Connected to central: ");
+      Serial.print("**************Connected to central: ");
       Serial.println(central.address());
       Serial.println("");
 
@@ -235,14 +236,14 @@ void loop() {
         }
       }
       //after connection is finished
-      Serial.println("Bluetooth disconected from central:");
+      Serial.println("************Bluetooth disconected from central:");
       Serial.println(central.address());
     }
     else{
       Serial.println("Central not connected");
     }
 
-    Serial.println("");
+    LEDOffDelay = defualtLEDDelay;
     roughPM = 0; 
 
 }
