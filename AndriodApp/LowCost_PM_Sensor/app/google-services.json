@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "788954936426",
+    "project_id": "lowcost-pm-sensor",
+    "storage_bucket": "lowcost-pm-sensor.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:788954936426:android:6a699ec0bc8c0aa3664613",
+        "android_client_info": {
+          "package_name": "com.example.lowcost_pm_sensor"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "788954936426-ou0c6eb0f9qvg8g2jpt9c0ok1rd8lajf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhqUlY99lxThzzhVb_AyJ3hAv4cMFSJXU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "788954936426-ou0c6eb0f9qvg8g2jpt9c0ok1rd8lajf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
