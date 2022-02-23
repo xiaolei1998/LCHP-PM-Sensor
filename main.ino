@@ -21,6 +21,15 @@
 #define LEDDelay 280  //delay some time for value to stablize
 #define ReadDelay 40  //time delayed after read;
 #define defualtLEDDelay 2999680
+#define SD_ENTRY_SIZE   25
+
+//#define SD_MAX_BLOCK    3900000  //for 1 GB : 10^9 / (25*#SD_BLOCK_WRITE_COUNT)
+//#define SD_MAX_BLOCK    7900000  //for 2 GB : 2*10^9 /(25*#SD_BLOCK_WRITE_COUNT)
+#define SD_MAX_BLOCK    5//for test 最多写5个block
+
+//#define SD_BLOCK_WRITE_COUNT 100;  //block write
+#define SD_BLOCK_WRITE_COUNT 5 //一个block含5条
+
 
 /******************************************************Global variables*****************************************************************/
 /*Bluetooth service*/
@@ -57,13 +66,20 @@ typedef struct{
   String time;
 }SD_data;
 
-
-File myfile;
-
-
-
 Data PMD;
-SD_data sd;
+
+
+
+/*SD config*/
+// char *       FILE_NAME;
+SD_data      sd;
+File         myfile;
+uint32_t     entry_count;
+uint32_t     dummytime; //for test
+SD_data      RAM_BUFFER[SD_BLOCK_WRITE_COUNT];
+uint32_t     BLOCK_COUNT;  
+bool         hot_swap;   //false when sd card is removed, true is sd card is installed
+uint32_t     file_pointer;
 
 /****************************************************************Setup*****************************************************************/
 void setup() {
@@ -90,20 +106,21 @@ void setup() {
       while (1);
     }
 
-    // setup_SD();
     if (!SD.begin(4)) {
       Serial.println("SD initialization failed!");
       //while (1);
     }
+  
 
-    Serial.println("SD initialization done.");
+    myfile = SD.open("PM.csv",O_READ | O_WRITE|O_CREAT);
+    if(myfile) Serial.println("file created\n");
+    myfile.close();
+    entry_count = 0;
 
-    myfile = SD.open("PM.csv",FILE_WRITE);
-
-    if(myfile){
-      myfile.println("Time,PM value");
-      myfile.flush();
-    }
+    // if(myfile){
+    //   myfile.println("Time,PM value");
+    //   myfile.flush();
+    // }
 
     
     //set this device as PM sensor
@@ -150,7 +167,6 @@ void printData(){
     }
     Serial.println("");
     Serial.println("Avergaed PM = " + String(roughPM) + "ug/m3 ");
-    //Serial.println("");
     
 }
 
@@ -174,7 +190,7 @@ void calcPM(){
 
   roughPM = roughPM/3;
   sd.PMvalue = roughPM;
-  printData();
+  //printData();
 
 }
 
@@ -233,19 +249,64 @@ void sense(){
 
 void SD_write(){
 
-    if(myfile){
+  RAM_BUFFER[entry_count] = sd;
+  entry_count++;
 
-        String buf = "2022-2-22 21:18:21,"+String(sd.PMvalue);
-        //String buf = String(sd.time)+","+String(sd.PMvalue);
-        myfile.println(buf);
-        Serial.println("sd write done\n");
-        myfile.flush();
+
+  //if ram buffer is full; move data from ram to sd card
+  if(entry_count == SD_BLOCK_WRITE_COUNT){
+
+
+
+    if(!SD.begin(4)){
+        entry_count = 0;
+        Serial.println("WARNING: SD card is not present!\n");
+        return;
     }else{
-      Serial.println("file open error\n");
+        if(SD.exists("PM.csv")){
+          myfile = SD.open("PM.csv",O_READ | O_WRITE);
+          myfile.seek(file_pointer);
+          Serial.println("log: file opened");
+        }else{
+          myfile = SD.open("PM.csv",O_READ | O_WRITE | O_CREAT);
+          myfile.seek(0);
+          Serial.println("log: file created");
+          BLOCK_COUNT = 0;
+        }
     }
 
-}
 
+
+    if(myfile){
+      //If full, use circular buffer, write from beginning;
+      if(BLOCK_COUNT==SD_MAX_BLOCK){
+        myfile.seek(0);
+        //Serial.println(myfile.position());
+        BLOCK_COUNT = 0;
+        Serial.println("log: circular buffer wrap around");
+      }
+
+      for(int i = 0; i<SD_BLOCK_WRITE_COUNT;i++){
+          //String buf = String(RAM_BUFFER[i].time)+","+String(RAM_BUFFER[i].PMvalue);
+          dummytime++;
+          String buf = String(dummytime)+","+String(RAM_BUFFER[i].PMvalue);
+          //Serial.println(myfile.position());
+          myfile.println(buf);
+      }
+      file_pointer = myfile.position();
+      //next update!!!!    don't delete, when rtc is ready
+      //prevent hot swap during writing. writing is not finished
+      //file_pointer = file_pointer - file_pointer%SD_ENTRY_SIZE;
+
+      entry_count = 0;
+      BLOCK_COUNT++;
+      myfile.close();
+      Serial.println("log : WRITE DONE ********\n");
+    }else{
+      Serial.println("WARNING: file open error\n");
+    }
+  }
+}
 /*********************************************Main loop***************************************************/
 
 void loop() {
