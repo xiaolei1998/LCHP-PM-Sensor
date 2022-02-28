@@ -18,3 +18,11 @@ MISO <-> Port 10
 MOSI <-> Port 8
 SCK  <-> Port 9
 CS   <-> Port 4
+
+
+
+RTC module connection：
+VCC <-> 5V
+GND <-> GND
+SCL <-> SCL
+SDA <-> SDA

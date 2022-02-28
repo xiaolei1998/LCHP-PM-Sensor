@@ -5,7 +5,8 @@
 #include <ArduinoBLE.h>
 #include <SPI.h>
 #include <SD.h>
-
+#include <DS3231.h>
+#include <Wire.h>
 
 
 #define STRINGSIZE 10
@@ -67,7 +68,7 @@ typedef struct{
 }SD_data;
 
 Data PMD;
-
+DS3231 myRTC;
 
 
 /*SD config*/
@@ -83,7 +84,8 @@ uint32_t     file_pointer;
 
 /****************************************************************Setup*****************************************************************/
 void setup() {
-    // put your setup code here, to run once:
+
+  /*Initialize sensors */
     //Serial.begin(115200);
     Serial.begin(9600);
 
@@ -100,32 +102,42 @@ void setup() {
     //waits for serial connection with a port
     while (!Serial);
 
-    //wait for bluetooth device to initialize successfully
-    if (!BLE.begin()) {
-      Serial.println("starting BLE failed!");
-      while (1);
-    }
 
+
+    /*initialize SD module*/
     if (!SD.begin(4)) {
       Serial.println("SD initialization failed!");
       //while (1);
     }
-  
-
     myfile = SD.open("PM.csv",O_READ | O_WRITE|O_CREAT);
     if(myfile) Serial.println("file created\n");
     myfile.close();
     entry_count = 0;
 
-    // if(myfile){
-    //   myfile.println("Time,PM value");
-    //   myfile.flush();
-    // }
 
+    /*initializing RTC Module*/
+    Wire.begin();
+    /***for testing only*******/
+    myRTC.setClockMode(false); 
+    myRTC.setYear(22);
+    myRTC.setMonth(2);
+    myRTC.setDate(28);
+    myRTC.setHour(14);
+    myRTC.setMinute(54);
+    myRTC.setSecond(48);
+    /***for testing only*******/
     
-    //set this device as PM sensor
+
+
+
+    /*initializing BLE Module*/
+    if (!BLE.begin()) {
+      Serial.println("starting BLE failed!");
+      while (1);
+    }
+
+
     BLE.setLocalName("PM sensor");
-    //set advertised service as PMservice
     BLE.setAdvertisedService(PMservice);
     Serial.println("PMsensor active, waiting for connections...");
 
@@ -173,8 +185,12 @@ void printData(){
 
 /*serialize the data so that it could be send through BLE*/
 inline void serialize(){
+  bool flag = false;
+  String realtime = String(myRTC.getYear()) + "." + String(myRTC.getMonth(flag)) + "."+ String(myRTC.getDate()) + "  "+ String(myRTC.getHour(flag,flag))+":"+String(myRTC.getMinute())+":"+String(myRTC.getSecond());
   sprintf(serialPM,"%f",roughPM);
-
+  //Serial.println("hello");
+  //Serial.println(realtime);
+  sd.time = realtime;
   sd.PMvalue = roughPM;
 }
 
@@ -190,6 +206,7 @@ void calcPM(){
 
   roughPM = roughPM/3;
   sd.PMvalue = roughPM;
+  serialize();
   //printData();
 
 }
@@ -198,8 +215,9 @@ void calcPM(){
 /*Send sensor's value out to smartphone*/
 void sendData(){
 
-  serialize();
+  //serialize();
   
+  //****note:2.22 bug potential*****/
   PMCharacteristic.writeValue(serialPM);
   //clear string
   memset(serialPM, '0',STRINGSIZE);
@@ -287,9 +305,9 @@ void SD_write(){
       }
 
       for(int i = 0; i<SD_BLOCK_WRITE_COUNT;i++){
-          //String buf = String(RAM_BUFFER[i].time)+","+String(RAM_BUFFER[i].PMvalue);
-          dummytime++;
-          String buf = String(dummytime)+","+String(RAM_BUFFER[i].PMvalue);
+          String buf = RAM_BUFFER[i].time + "," + String(RAM_BUFFER[i].PMvalue);
+          //dummytime++;
+          //String buf = String(dummytime)+","+String(RAM_BUFFER[i].PMvalue);
           //Serial.println(myfile.position());
           myfile.println(buf);
       }
