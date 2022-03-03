@@ -18,7 +18,13 @@ public class AlertModeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_alertmode);
-// Process Navigation Bar
+
+
+        String Mode = getIntent().getExtras().getString("Mode");
+        if (Mode.equals("Offline")){
+            getSupportActionBar().setTitle("LowCost_PM_Sensor (Offline)");
+        }
+        // Process Navigation Bar
         bottomNavigationView = findViewById(R.id.bottom_navigation_event);
         bottomNavigationView.setSelectedItemId(R.id.navigation_Alert);
 
@@ -29,11 +35,21 @@ public class AlertModeActivity extends AppCompatActivity {
                 switch (item.getItemId()) {
                     case R.id.navigation_Data:
                         Intent intent1 = new Intent(AlertModeActivity.this, ViewDataActivity.class);
+                        if (Mode.equals("Offline")){
+                            intent1.putExtra("Mode","Offline");
+                        }else{
+                            intent1.putExtra("Mode","Online");
+                        }
                         startActivity(intent1);
                         finish();
                         return true;
                     case R.id.navigation_Main:
                         Intent intent2 = new Intent(AlertModeActivity.this, MainActivity.class);
+                        if (Mode.equals("Offline")){
+                            intent2.putExtra("Mode","Offline");
+                        }else{
+                            intent2.putExtra("Mode","Online");
+                        }
                         startActivity(intent2);
                         finish();
                         return true;

@@ -30,6 +30,7 @@ public class LogInActivity extends AppCompatActivity {
     //setting the fields
     private Button login_signIn_button;
     private Button login_signUp_button;
+    private Button offlineLogin;
 
     private TextInputLayout email_layout;
     private TextInputLayout password_layout;
@@ -53,6 +54,7 @@ public class LogInActivity extends AppCompatActivity {
         passWord = findViewById(R.id.login_password_editText);
         email_layout = findViewById(R.id.login_useremail_Layout);
         password_layout = findViewById(R.id.login_password_Layout);
+        offlineLogin = findViewById(R.id.login_offline_button);
 
 
 
@@ -93,6 +95,17 @@ public class LogInActivity extends AppCompatActivity {
                 startActivity(Main);
             }
         });
+
+        offlineLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(LogInActivity.this, "Login was successful", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                intent.putExtra("Mode","Offline");
+                startActivity(intent);
+                finish();
+            }
+        });
     }
 
 
@@ -109,7 +122,9 @@ public class LogInActivity extends AppCompatActivity {
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()) {
                     Toast.makeText(LogInActivity.this, "Login was successful", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                    Intent intent1 = new Intent(getApplicationContext(), MainActivity.class);
+                    intent1.putExtra("Mode","Online");
+                    startActivity(intent1);
                     finish();
                 } else {
                     try {

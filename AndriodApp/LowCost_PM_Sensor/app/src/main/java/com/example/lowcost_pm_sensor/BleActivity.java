@@ -27,10 +27,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,20 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-
-public class MainActivity extends AppCompatActivity {
-    BottomNavigationView bottomNavigationView;
-    Button BleSwitch;
-    TextView connection_state;
-    TextView devices;
-
-
-    private List<String> mPermissionList = new ArrayList<>();
-    private String[] permissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION};
-    private final int mRequestCode = 200;
-
-
-    // for the bluetooth connection
+public class BleActivity extends AppCompatActivity implements View.OnClickListener{
     String TAG = "BleActivity";
 
     boolean USE_SPECIFIC_UUID = true;//Use specific UUID
@@ -70,6 +54,13 @@ public class MainActivity extends AppCompatActivity {
     // 描述标识 -- check with group
     private final UUID mConfigUUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
+
+    // 数组permissions，存储蓝牙连接需要的权限
+    private String[] permissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION};
+    // 未授予的权限存储到mPerrrmissionList
+    private List<String> mPermissionList = new ArrayList<>();
+    // 权限请求码
+    private final int mRequestCode = 200;
 
 
     private BluetoothAdapter mBluetoothAdapter;
@@ -88,22 +79,26 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<BluetoothGattCharacteristic> readCharacteristicArrayList ;
     private ArrayList<BluetoothGattCharacteristic> notifyCharacteristicArrayList ;
 
+    // 按钮
+    private Button btn_ble;
+    BottomNavigationView bottomNavigationView;
+    private TextView tv_device_name;
+    // 接收数据框
+    private EditText edit_receive_data;
+
+    private int show_ble = 0;
+
+    private  String device_name = "";
+
     ProgressDialog waitDialog;
     ProgressDialog cancelDialog;
 
-
-    @SuppressLint("WrongViewCast")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.ble_connection);
         initPermission();
         initView();
-
-        String Mode = getIntent().getExtras().getString("Mode");
-        if (Mode.equals("Offline")){
-            getSupportActionBar().setTitle("LowCost_PM_Sensor (Offline)");
-        }
 
         // 获取BluetoothAdapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -112,42 +107,8 @@ public class MainActivity extends AppCompatActivity {
         readCharacteristicArrayList = new ArrayList<>();
         notifyCharacteristicArrayList = new ArrayList<>();
 
-        BleSwitch = findViewById(R.id.BLE_switch);
-
-        BleSwitch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.d(TAG, "click received");
-                if(view.getId() == R.id.BLE_switch){
-                    // If connect, then perform disconnecting
-                    if (mConnectionState){
-                        cancelDialog.show();
-                        mHandler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                cancelDialog.dismiss();
-                            }
-                        },1000);
-                        mConnectionState = false;
-                        connection_state.setText("Disconnected");
-                        BleSwitch.setBackgroundResource(R.drawable.ic_circle_grey);
-
-
-                        if(mBluetoothGatt!=null){
-                            mBluetoothGatt.disconnect();
-                        }
-                    }else {
-                        if (!checkBleDevice(getApplicationContext())){
-                            return;
-                        }
-                        bluetoothDeviceArrayList.clear();
-                        Log.d(TAG, "scanDevice begin");
-                        scanLeDevice(true);
-                    }
-                }
-            }
-        });
         // Process Navigation Bar
+
         bottomNavigationView = findViewById(R.id.bottom_navigation_event);
         bottomNavigationView.setSelectedItemId(R.id.navigation_Main);
 
@@ -157,24 +118,17 @@ public class MainActivity extends AppCompatActivity {
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.navigation_Data:
-                        Intent intent1 = new Intent(MainActivity.this, ViewDataActivity.class);
-                        if (Mode.equals("Offline")){
-                            intent1.putExtra("Mode","Offline");
-                        }else{
-                            intent1.putExtra("Mode","Online");
-                        }
+                        Intent intent1 = new Intent(BleActivity.this, ViewDataActivity.class);
                         startActivity(intent1);
                         finish();
                         return true;
                     case R.id.navigation_Main:
+                        Intent intent3 = new Intent(BleActivity.this, MainActivity.class);
+                        startActivity(intent3);
+                        finish();
                         return true;
                     case R.id.navigation_Alert:
-                        Intent intent2 = new Intent(MainActivity.this, AlertModeActivity.class);
-                        if (Mode.equals("Offline")){
-                            intent2.putExtra("Mode","Offline");
-                        }else{
-                            intent2.putExtra("Mode","Online");
-                        }
+                        Intent intent2 = new Intent(BleActivity.this, AlertModeActivity.class);
                         startActivity(intent2);
                         finish();
                         return true;
@@ -182,10 +136,12 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+
     }
+
     /**
      * Permission check and request
-     */
+*/
     private void initPermission() {
         mPermissionList.clear();//Clear waiting Permission
         //Check if permission is given
@@ -200,7 +156,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     /**
      * Initialization
      *    Ble button：R.id.btn_ble
@@ -211,9 +166,15 @@ public class MainActivity extends AppCompatActivity {
      */
     private void initView(){
 
-        devices = findViewById(R.id.device);
-        connection_state = findViewById(R.id.connection);
+        show_ble = 0;
 
+        btn_ble = findViewById(R.id.btn_ble);
+        btn_ble.setOnClickListener((View.OnClickListener) this);
+
+        tv_device_name = findViewById(R.id.tv_device_name);
+
+        edit_receive_data = findViewById(R.id.edit_receive_data);
+        edit_receive_data.setMovementMethod(ScrollingMovementMethod.getInstance());
 
         waitDialog = new ProgressDialog(this);
         waitDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
@@ -230,6 +191,41 @@ public class MainActivity extends AppCompatActivity {
 
         cancelDialog.setTitle("Please Wait");
         cancelDialog.setMessage("Disconnecting");
+    }
+
+    /**
+     * OnClick
+     * @param v
+     */
+    @SuppressLint("MissingPermission")
+    @Override
+    public void onClick(View v) {
+        Log.d(TAG, "click received");
+        if(v.getId() == R.id.btn_ble){
+            // If connect, then perform disconnecting
+            if (mConnectionState){
+                cancelDialog.show();
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        cancelDialog.dismiss();
+                    }
+                },1000);
+                mConnectionState = false;
+                btn_ble.setText("Connect BLE");
+
+                if(mBluetoothGatt!=null){
+                    mBluetoothGatt.disconnect();
+                }
+            }else {
+                if (!checkBleDevice(this)){
+                    return;
+                }
+                bluetoothDeviceArrayList.clear();
+                Log.d(TAG, "scanDevice begin");
+                scanLeDevice(true);
+            }
+        }
     }
 
     /**
@@ -382,10 +378,9 @@ public class MainActivity extends AppCompatActivity {
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            connection_state.setText("Connected");
-                            String device_name = mBluetoothGatt.getDevice().getName();
-                            BleSwitch.setBackgroundResource(R.drawable.ic_circle_green);
-                            devices.setText("" + device_name);
+                            btn_ble.setText("Disconnect");
+                            device_name = mBluetoothGatt.getDevice().getName();
+                            tv_device_name.setText("" + device_name);
                             waitDialog.dismiss();
                         }
                     });
@@ -393,7 +388,7 @@ public class MainActivity extends AppCompatActivity {
                     if (mBluetoothGatt == gatt){
                         mConnectionState = true;
                         gatt.discoverServices();
-                        String device_name = mBluetoothGatt.getDevice().getName();
+                        device_name = mBluetoothGatt.getDevice().getName();
                     }
                 }
 
@@ -408,8 +403,9 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
                             //未连接
                             waitDialog.dismiss();
-                            String device_name = "";
-                            devices.setText("");
+                            btn_ble.setText("Connect Device");
+                            device_name = "";
+                            tv_device_name.setText("");
                         }
                     });
                 }else {
@@ -418,7 +414,7 @@ public class MainActivity extends AppCompatActivity {
                         if(mBluetoothGatt!=null){
                             mBluetoothGatt.close();
                         }
-                        String device_name = mBluetoothGatt.getDevice().getName();
+                        device_name = mBluetoothGatt.getDevice().getName();
                     }
 
                 }
@@ -471,6 +467,26 @@ public class MainActivity extends AppCompatActivity {
         public void onDescriptorWrite(BluetoothGatt gatt,
                                       BluetoothGattDescriptor descriptor, int status) {
             Log.i(TAG,"onDescriptorWrite");
+        }
+
+        @Override
+        public void onCharacteristicChanged(BluetoothGatt gatt,
+                                            BluetoothGattCharacteristic characteristic) {
+            final byte[] desData = characteristic.getValue();
+            //Log.i(TAG,"onCharacteristicChanged:"+desData.toString());
+            if (mBluetoothGatt == gatt){
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        if (edit_receive_data.getText().length()>100){
+                            edit_receive_data.setText("");
+                        }
+                        edit_receive_data.setText(edit_receive_data.getText()+" "+bytesToHex(desData));
+                    }
+                });
+            }
+
         }
 
 
@@ -533,6 +549,15 @@ public class MainActivity extends AppCompatActivity {
         }
         return new String(hexChars);
     }
+
+    @Override
+    public void onBackPressed() {
+        Intent intent3 = new Intent(BleActivity.this, MainActivity.class);
+        startActivity(intent3);
+        finish();
+    }
+
+
 
 
 }
