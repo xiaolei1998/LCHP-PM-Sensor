@@ -56,15 +56,15 @@ public class MainActivity extends AppCompatActivity {
     private String[] permissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION};
     private final int mRequestCode = 200;
 
-
+    private TextView receive_data;
     // for the bluetooth connection
     String TAG = "BleActivity";
 
     boolean USE_SPECIFIC_UUID = true;//Use specific UUID
     // 服务标识
     private final UUID mServiceUUID = UUID.fromString("ef12c126-80cf-11ec-a8a3-0242ac120002");
-    // 特征标识（读取数据）PM value
-    private final UUID mCharacteristicUUID_pm = UUID.fromString("7772e5db-3868-4112-a1a9-f2669d106bf3");
+    // 特征标识（读取数据）PM value  7772e5db-3868-4112-a1a9-f2669d106bf3   76b0499a-80ea-11ec-a8a3-0242ac120002
+    private final UUID mCharacteristicUUID_pm = UUID.fromString("76b0499a-80ea-11ec-a8a3-0242ac120002");
     // 特征标识（发送数据） Frequency
     private final UUID mCharacteristicUUID_freq = UUID.fromString("36612c92-80ea-11ec-a8a3-0242ac120002");
     // 描述标识 -- check with group
@@ -213,6 +213,9 @@ public class MainActivity extends AppCompatActivity {
 
         devices = findViewById(R.id.device);
         connection_state = findViewById(R.id.connection);
+
+        receive_data = findViewById(R.id.edit_receive_data);
+        receive_data.setMovementMethod(ScrollingMovementMethod.getInstance());
 
 
         waitDialog = new ProgressDialog(this);
@@ -440,7 +443,7 @@ public class MainActivity extends AppCompatActivity {
                         if (gattService != null) {
                             //obtain characteristic
                             BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(mCharacteristicUUID_pm);
-                            setmBluetoothGattNotification(mBluetoothGatt, gattCharacteristic, true);
+                            setBluetoothGattNotification(mBluetoothGatt, gattCharacteristic, true);
                             //获取特定特征成功
                             if (gattCharacteristic != null) {
                                 readCharacteristicArrayList.add(gattCharacteristic);
@@ -461,8 +464,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt,
                                          BluetoothGattCharacteristic characteristic, int status) {
+            final byte[] desData = characteristic.getValue();
+            Log.i(TAG,"onCharacteristicRead:"+desData.toString());
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                final byte[] desData = characteristic.getValue();
+                //final byte[] desData = characteristic.getValue();
                 Log.i(TAG,"onCharacteristicRead:"+desData.toString());
             }
         }
@@ -473,7 +478,26 @@ public class MainActivity extends AppCompatActivity {
             Log.i(TAG,"onDescriptorWrite");
         }
 
+        @Override
+        public void onCharacteristicChanged(BluetoothGatt gatt,
+                                            BluetoothGattCharacteristic characteristic) {
+            final byte[] String = characteristic.getValue();
+            String desData = new String(String);
+            Log.i(TAG,"onCharacteristicChanged:"+desData.toString());
+            if (mBluetoothGatt == gatt){
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
 
+                        if (receive_data.getText().length()>20){
+                            receive_data.setText("");
+                        }
+                        receive_data.setText(desData);
+                    }
+                });
+            }
+
+        }
 
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
@@ -490,7 +514,7 @@ public class MainActivity extends AppCompatActivity {
      * Set BLE notification if data are received
      */
     @SuppressLint("MissingPermission")
-    private boolean setmBluetoothGattNotification(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic characteristic, boolean enable){
+    private boolean setBluetoothGattNotification(BluetoothGatt bluetoothGatt, BluetoothGattCharacteristic characteristic, boolean enable){
         //Logger.d("setCharacteristicNotification");
         System.out.println("set---------test");
         bluetoothGatt.setCharacteristicNotification(characteristic, enable);
