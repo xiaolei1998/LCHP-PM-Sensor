@@ -47,7 +47,7 @@ public class ViewDataActivity extends AppCompatActivity {
                         finish();
                         return true;
                     case R.id.navigation_Alert:
-                        Intent intent2 = new Intent(ViewDataActivity.this, AlertModeActivity.class);
+                        Intent intent2 = new Intent(ViewDataActivity.this, ProfileActivity.class);
                         if (Mode.equals("Offline")){
                             intent2.putExtra("Mode","Offline");
                         }else{

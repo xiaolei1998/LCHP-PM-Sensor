@@ -45,9 +45,12 @@ import com.google.android.material.navigation.NavigationBarView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 
@@ -66,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private List<String> received_data = new ArrayList<>();
+    private List<String> current_time = new ArrayList<>();
 
     private TextView receive_data;
     // for the bluetooth connection
@@ -262,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
                     case R.id.navigation_Main:
                         return true;
                     case R.id.navigation_Alert:
-                        Intent intent2 = new Intent(MainActivity.this, AlertModeActivity.class);
+                        Intent intent2 = new Intent(MainActivity.this, ProfileActivity.class);
                         if (Mode.equals("Offline")){
                             intent2.putExtra("Mode","Offline");
                         }else{
@@ -589,13 +593,17 @@ public class MainActivity extends AppCompatActivity {
 
                         receive_data.setText(desData);
                         received_data.add(desData.toString());
+                        String currentDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(new Date());
+                        String currentTime = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
+                        current_time.add( currentDate + " , "  + currentTime);
                         if(Mode.equals("Online")){
                             HashMap<String,Object> map = new HashMap<>();
                             map.put("DatasetName",DatasetName);
+                            map.put("DataTime",current_time);
                             map.put("Frequency",3);
                             map.put("Data",received_data);
 
-                            FirebaseDatabase.getInstance().getReference().child(uid).child("Datasets").child(DatasetName).updateChildren(map);
+                            FirebaseDatabase.getInstance().getReference().child(uid).child("Datasets").child(currentDate).child(DatasetName).updateChildren(map);
                         }
                     }
                 });
