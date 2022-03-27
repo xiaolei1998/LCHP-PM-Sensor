@@ -21,6 +21,7 @@ public class AlertModeActivity extends AppCompatActivity {
 
 
         String Mode = getIntent().getExtras().getString("Mode");
+        String From = getIntent().getExtras().getString("From");
         if (Mode.equals("Offline")){
             getSupportActionBar().setTitle("LowCost_PM_Sensor (Offline)");
         }
@@ -44,13 +45,13 @@ public class AlertModeActivity extends AppCompatActivity {
                         finish();
                         return true;
                     case R.id.navigation_Main:
-                        Intent intent2 = new Intent(AlertModeActivity.this, MainActivity.class);
-                        if (Mode.equals("Offline")){
-                            intent2.putExtra("Mode","Offline");
-                        }else{
-                            intent2.putExtra("Mode","Online");
-                        }
-                        startActivity(intent2);
+//                        Intent intent2 = new Intent(AlertModeActivity.this, MainActivity.class);
+//                        if (Mode.equals("Offline")){
+//                            intent2.putExtra("Mode","Offline");
+//                        }else{
+//                            intent2.putExtra("Mode","Online");
+//                        }
+//                        startActivity(intent2);
                         finish();
                         return true;
                     case R.id.navigation_Alert:

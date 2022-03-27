@@ -92,6 +92,7 @@ public class LogInActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent Main = new Intent(getApplicationContext(), SignUpActivity.class);
+                Main.putExtra("Mode","Online");
                 startActivity(Main);
             }
         });

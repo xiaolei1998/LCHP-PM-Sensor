@@ -3,6 +3,7 @@ package com.example.lowcost_pm_sensor;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -22,6 +23,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.InputType;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.MenuItem;
@@ -30,6 +32,7 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -39,8 +42,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,6 +54,8 @@ import java.util.UUID;
 public class MainActivity extends AppCompatActivity {
     BottomNavigationView bottomNavigationView;
     Button BleSwitch;
+    Button start;
+    Button ChangeFreq;
     TextView connection_state;
     TextView devices;
 
@@ -55,6 +63,9 @@ public class MainActivity extends AppCompatActivity {
     private List<String> mPermissionList = new ArrayList<>();
     private String[] permissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION};
     private final int mRequestCode = 200;
+
+
+    private List<String> received_data = new ArrayList<>();
 
     private TextView receive_data;
     // for the bluetooth connection
@@ -91,6 +102,12 @@ public class MainActivity extends AppCompatActivity {
     ProgressDialog waitDialog;
     ProgressDialog cancelDialog;
 
+    private FirebaseAuth authentication;
+    private String uid;
+    private String Mode;
+    private String Freq;
+    private String DatasetName = "Buffer";
+    private String BLE_state = "Off";
 
     @SuppressLint("WrongViewCast")
     @Override
@@ -100,9 +117,15 @@ public class MainActivity extends AppCompatActivity {
         initPermission();
         initView();
 
-        String Mode = getIntent().getExtras().getString("Mode");
+        Mode = getIntent().getExtras().getString("Mode");
         if (Mode.equals("Offline")){
             getSupportActionBar().setTitle("LowCost_PM_Sensor (Offline)");
+        }
+
+        authentication = FirebaseAuth.getInstance();
+        if (authentication.getCurrentUser() != null){
+            uid = authentication.getCurrentUser().getUid();
+            System.out.println("------------------->" + uid);
         }
 
         // 获取BluetoothAdapter
@@ -113,6 +136,76 @@ public class MainActivity extends AppCompatActivity {
         notifyCharacteristicArrayList = new ArrayList<>();
 
         BleSwitch = findViewById(R.id.BLE_switch);
+        start = findViewById(R.id.Start_btn);
+        ChangeFreq = findViewById(R.id.Freq_btn);
+
+        start.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                if (BLE_state.equals("On")){
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    builder.setTitle("Input the DataSetName: ");
+
+                    // Set up the input
+                    final EditText input = new EditText(MainActivity.this);
+                    // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+                    input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                    builder.setView(input);
+
+                    // Set up the buttons
+                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            DatasetName = input.getText().toString();
+                        }
+                    });
+                    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    });
+
+                    builder.show();
+                }
+            }
+        });
+
+        ChangeFreq.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                if (BLE_state.equals("On")){
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    builder.setTitle("Input the Frequency you want: ");
+
+                    // Set up the input
+                    final EditText input = new EditText(MainActivity.this);
+                    // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+                    input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                    builder.setView(input);
+
+                    // Set up the buttons
+                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Freq = input.getText().toString();
+                        }
+                    });
+                    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    });
+
+                    builder.show();
+                }
+            }
+        });
 
         BleSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -130,6 +223,7 @@ public class MainActivity extends AppCompatActivity {
                         },1000);
                         mConnectionState = false;
                         connection_state.setText("Disconnected");
+                        BLE_state = "Off";
                         BleSwitch.setBackgroundResource(R.drawable.ic_circle_grey);
 
 
@@ -164,7 +258,6 @@ public class MainActivity extends AppCompatActivity {
                             intent1.putExtra("Mode","Online");
                         }
                         startActivity(intent1);
-                        finish();
                         return true;
                     case R.id.navigation_Main:
                         return true;
@@ -176,13 +269,16 @@ public class MainActivity extends AppCompatActivity {
                             intent2.putExtra("Mode","Online");
                         }
                         startActivity(intent2);
-                        finish();
                         return true;
                 }
                 return false;
             }
         });
+
     }
+
+
+
     /**
      * Permission check and request
      */
@@ -337,6 +433,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+
     /**
      *We can use Mac address to connect
      * @param address
@@ -386,6 +483,7 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             connection_state.setText("Connected");
+                            BLE_state = "On";
                             String device_name = mBluetoothGatt.getDevice().getName();
                             BleSwitch.setBackgroundResource(R.drawable.ic_circle_green);
                             devices.setText("" + device_name);
@@ -489,10 +587,16 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
 
-                        if (receive_data.getText().length()>20){
-                            receive_data.setText("");
-                        }
                         receive_data.setText(desData);
+                        received_data.add(desData.toString());
+                        if(Mode.equals("Online")){
+                            HashMap<String,Object> map = new HashMap<>();
+                            map.put("DatasetName",DatasetName);
+                            map.put("Frequency",3);
+                            map.put("Data",received_data);
+
+                            FirebaseDatabase.getInstance().getReference().child(uid).child("Datasets").child(DatasetName).updateChildren(map);
+                        }
                     }
                 });
             }

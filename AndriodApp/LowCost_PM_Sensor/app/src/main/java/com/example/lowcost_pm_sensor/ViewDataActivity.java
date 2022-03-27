@@ -37,13 +37,13 @@ public class ViewDataActivity extends AppCompatActivity {
                     case R.id.navigation_Data:
                         return true;
                     case R.id.navigation_Main:
-                        Intent intent1 = new Intent(ViewDataActivity.this, MainActivity.class);
-                        if (Mode.equals("Offline")){
-                            intent1.putExtra("Mode","Offline");
-                        }else{
-                            intent1.putExtra("Mode","Online");
-                        }
-                        startActivity(intent1);
+//                        Intent intent1 = new Intent(ViewDataActivity.this, MainActivity.class);
+//                        if (Mode.equals("Offline")){
+//                            intent1.putExtra("Mode","Offline");
+//                        }else{
+//                            intent1.putExtra("Mode","Online");
+//                        }
+//                        startActivity(intent1);
                         finish();
                         return true;
                     case R.id.navigation_Alert:
