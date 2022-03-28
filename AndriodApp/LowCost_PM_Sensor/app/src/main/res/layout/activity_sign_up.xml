@@ -3,19 +3,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:padding="30dp"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="30dp">
 
     <TextView
         android:id="@+id/signup_textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="167dp"
+        android:layout_height="167dp"
         android:layout_marginTop="24dp"
+        android:background="@mipmap/signup"
         android:fontFamily="sans-serif-black"
-        android:text="Sign Up"
+        android:textAllCaps="false"
         android:textSize="40sp"
         android:textStyle="bold"
-        android:textAllCaps="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -25,10 +25,10 @@
         android:id="@+id/signup_username_Layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="60dp"
+        app:endIconMode="clear_text"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:endIconMode="clear_text"
         app:layout_constraintTop_toBottomOf="@+id/signup_textView">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -38,18 +38,18 @@
             android:layout_marginTop="24dp"
             android:backgroundTint="@color/white"
             android:fontFamily="sans-serif-black"
-            android:hint="Enter name"
+            android:hint="your name"
             android:textAlignment="center"
-            android:textSize="25sp"
-            app:layout_constraintStart_toStartOf="parent"/>
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="parent" />
     </com.google.android.material.textfield.TextInputLayout>
 
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/signup_userEmail_Layout"
         android:layout_width="match_parent"
-        app:endIconMode="clear_text"
         android:layout_height="wrap_content"
+        app:endIconMode="clear_text"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/signup_username_Layout">
@@ -60,9 +60,9 @@
             android:layout_height="wrap_content"
             android:backgroundTint="@color/white"
             android:fontFamily="sans-serif-black"
-            android:hint="Enter email"
+            android:hint="your email"
             android:textAlignment="center"
-            android:textSize="25sp" />
+            android:textSize="14sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
 
@@ -80,12 +80,12 @@
             android:id="@+id/signUp_passWord_EditView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:inputType="textPassword"
-            android:fontFamily="sans-serif-black"
-            android:textSize="25sp"
             android:backgroundTint="@color/white"
-            android:hint="Enter Password"/>
+            android:fontFamily="sans-serif-black"
+            android:hint="your Password"
+            android:inputType="textPassword"
+            android:textAlignment="center"
+            android:textSize="14sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -102,25 +102,29 @@
             android:id="@+id/signUp_confirm_passWord_EditView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:inputType="textPassword"
-            android:fontFamily="sans-serif-black"
-            android:textSize="25sp"
             android:backgroundTint="@color/white"
-            android:hint="Confirm Password"/>
+            android:fontFamily="sans-serif-black"
+            android:hint="Confirm Password"
+            android:inputType="textPassword"
+            android:textAlignment="center"
+            android:textSize="14sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
 
     <Button
         android:id="@+id/signUp_createAccount_Button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="200dp"
+        android:layout_height="40dp"
         android:layout_marginTop="20dp"
-        android:text="Create Account"
+        android:background="@drawable/round_button"
         android:fontFamily="sans-serif-black"
-        android:textSize="25sp"
-        app:layout_constraintTop_toBottomOf="@id/signup_confirm_password_Layout"
-        app:layout_constraintEnd_toEndOf="@+id/signup_confirm_password_Layout"/>
+        android:text="signup"
+        app:backgroundTint="@color/moegi"
+        android:textSize="15sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/signup_confirm_password_Layout" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

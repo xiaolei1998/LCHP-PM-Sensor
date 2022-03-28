@@ -55,6 +55,9 @@
             android:name=".AlertModeActivity"
             android:exported="true"/>
         <activity
+            android:name=".DataListActivity"
+            android:exported="true"/>
+        <activity
             android:name=".ProfileActivity"
             android:exported="true"/>
         <activity

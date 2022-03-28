@@ -6,17 +6,19 @@
 
     android:layout_height="match_parent">
 
+
     <ImageView
         android:id="@+id/profile_ImageView"
         android:layout_width="match_parent"
         android:layout_height="154dp"
-        android:layout_marginTop="25dp"
         android:layout_marginHorizontal="25dp"
+        android:layout_marginTop="108dp"
+        android:contentDescription="This is where the profile picture is stored."
+        app:layout_constraintHorizontal_bias="0.4"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:contentDescription="This is where the profile picture is stored." />
 
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -31,7 +33,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:background="@drawable/round_button"
             android:layout_marginRight="10dp"
+            app:backgroundTint="@color/moegi"
+
             android:text="Sign Out" />
 
 
@@ -41,7 +46,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginLeft="10dp"
-            android:text="Apply Changes"/>
+            android:background="@drawable/round_button"
+            app:backgroundTint="@color/moegi"
+            android:text="Apply"/>
 
 
     </LinearLayout>
@@ -62,7 +69,7 @@
             android:layout_height="wrap_content"
             android:textAlignment="center"
             android:fontFamily="sans-serif-black"
-            android:textSize="25sp"
+            android:textSize="16sp"
             android:backgroundTint="@color/white"
             android:hint="Name"/>
     </com.google.android.material.textfield.TextInputLayout>
@@ -87,7 +94,7 @@
             android:clickable="false"
             android:focusable="false"
             android:hint="Email"
-            android:textSize="25sp"/>
+            android:textSize="16sp"/>
     </com.google.android.material.textfield.TextInputLayout>
 
 
@@ -108,7 +115,7 @@
             android:textAlignment="center"
             android:inputType="number"
             android:fontFamily="sans-serif-black"
-            android:textSize="25sp"
+            android:textSize="16sp"
             android:backgroundTint="@color/white"
             android:hint="Age"/>
     </com.google.android.material.textfield.TextInputLayout>
@@ -150,12 +157,12 @@
             android:id="@+id/profile_others_radioButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="false"
-            android:text="Others"
             android:layout_marginLeft="30dp"
+            android:checked="false"
             android:fontFamily="sans-serif-black"
-            android:textSize="14sp"
-            android:paddingLeft="4dp"/>
+            android:paddingLeft="4dp"
+            android:text="Others"
+            android:textSize="14sp" />
     </RadioGroup>
 
 
@@ -172,10 +179,12 @@
 
     <Button
         android:id="@+id/profile_addImage_Button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:text="Add Profile Image"
+        app:backgroundTint="@color/moegi"
+        android:layout_width="200dp"
+        android:layout_height="45dp"
         android:textSize="14sp"
+        android:background="@drawable/round_button"
         app:layout_constraintBottom_toTopOf="@+id/profile_userName_Layout"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"

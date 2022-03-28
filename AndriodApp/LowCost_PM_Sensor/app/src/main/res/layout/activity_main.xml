@@ -9,83 +9,92 @@
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/BLE_switch"
-        android:layout_width="250dp"
-        android:layout_height="250dp"
-        android:layout_marginTop="48dp"
-        android:background="@drawable/ic_circle_grey"
-        android:drawableBottom="@drawable/ic_menu_poweroff"
+        android:layout_width="157dp"
+        android:layout_height="137dp"
+        android:layout_marginTop="76dp"
+        android:background="@mipmap/bledisconnect"
         android:switchMinWidth="10dp"
         android:textSize="25sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.496"
+        app:layout_constraintHorizontal_bias="0.511"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="UseSwitchCompatOrMaterialXml" />
 
     <TextView
         android:id="@+id/connection"
+        style="@style/Widget.AppCompat.TextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/BLE_switch"
-        android:textSize="25sp"
+        android:text="Waiting for connection🕜..."
+        android:textAppearance="@style/TextAppearance.AppCompat.Display2"
+        android:textSize="16sp"
         android:textStyle="bold"
-        android:text="Not Connected"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteY="98dp" />
+        app:layout_constraintTop_toBottomOf="@id/BLE_switch" />
 
     <TextView
         android:id="@+id/device"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@+id/connection"
         android:textSize="25sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/connection"
         tools:layout_editor_absoluteY="98dp" />
 
     <TextView
         android:id="@+id/edit_receive_data"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="45dp"
+        android:text="Number"
         android:textSize="25sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:text="Number"
-        app:layout_constraintTop_toBottomOf="@+id/device"
-        android:layout_height="wrap_content" />
+        app:layout_constraintTop_toBottomOf="@+id/device" />
 
     <Button
         android:id="@+id/Freq_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Change Frequency"
-        android:layout_marginTop="75dp"
-        app:layout_constraintTop_toBottomOf="@id/device"
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_width="160dp"
+        android:layout_height="45dp"
+        android:layout_marginTop="260dp"
+        android:background="@drawable/round_button"
+        android:text="Change Speed"
+        android:textAllCaps="false"
+        app:backgroundTint="@color/moegi"
         app:layout_constraintEnd_toEndOf="parent"
+
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/device"
         tools:ignore="MissingConstraints,NotSibling" />
 
     <Button
         android:id="@+id/Start_btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="150dp"
+        android:layout_height="45dp"
+        android:layout_marginTop="200dp"
+        android:background="@drawable/round_button"
         android:text="Start"
-        android:layout_marginTop="124dp"
-        app:layout_constraintTop_toBottomOf="@id/device"
-        app:layout_constraintStart_toStartOf="parent"
+        android:textAllCaps="false"
+        app:backgroundTint="@color/moegi"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.493"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/device"
         tools:ignore="MissingConstraints,NotSibling" />
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        xmlns:app="http://schemas.android.com/apk/res-auto"
+    <com.google.android.material.bottomnavigation.BottomNavigationView xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/bottom_navigation_event"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        app:labelVisibilityMode="labeled"
         android:layout_gravity="bottom"
+        app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:menu="@menu/bottom_navigation_menu" />

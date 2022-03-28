@@ -228,7 +228,9 @@ public class MainActivity extends AppCompatActivity {
                         mConnectionState = false;
                         connection_state.setText("Disconnected");
                         BLE_state = "Off";
-                        BleSwitch.setBackgroundResource(R.drawable.ic_circle_grey);
+                        //BleSwitch.setBackgroundResource(R.drawable.ic_circle_grey);
+                        BleSwitch.setBackgroundResource(R.mipmap.freshair);
+
 
 
                         if(mBluetoothGatt!=null){
@@ -489,7 +491,8 @@ public class MainActivity extends AppCompatActivity {
                             connection_state.setText("Connected");
                             BLE_state = "On";
                             String device_name = mBluetoothGatt.getDevice().getName();
-                            BleSwitch.setBackgroundResource(R.drawable.ic_circle_green);
+                            //BleSwitch.setBackgroundResource(R.drawable.ic_circle_green);
+                            BleSwitch.setBackgroundResource(R.mipmap.bledisconnect);
                             devices.setText("" + device_name);
                             waitDialog.dismiss();
                         }
@@ -598,10 +601,12 @@ public class MainActivity extends AppCompatActivity {
                         current_time.add( currentDate + " , "  + currentTime);
                         if(Mode.equals("Online")){
                             HashMap<String,Object> map = new HashMap<>();
-                            map.put("DatasetName",DatasetName);
-                            map.put("DataTime",current_time);
-                            map.put("Frequency",3);
-                            map.put("Data",received_data);
+                            DataSet dataS = new DataSet(received_data, current_time,DatasetName, "3" );
+//                            map.put("DatasetName",DatasetName);
+//                            map.put("DataTime",current_time);
+//                            map.put("Frequency",3);
+//                            map.put("Data",received_data);
+                            map.put(DatasetName,dataS);
 
                             FirebaseDatabase.getInstance().getReference().child(uid).child("Datasets").child(currentDate).child(DatasetName).updateChildren(map);
                         }
