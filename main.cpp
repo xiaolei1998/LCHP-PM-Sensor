@@ -48,11 +48,7 @@ BLECharacteristic FreqCharacteristic("36612c92-80ea-11ec-a8a3-0242ac120002", BLE
 /*define DHT temp&humid sensor port (D5) and type*/
 DHT THsensor(5, DHTTYPE);
 
-//rough PM estimation value
-float roughPM = 0;
 
-//fine PM after ofset by temp & humid difference
-float finePM = 0;
 
 // int readInterval = 3; // reading interval (one read per how many seconds)
 long LEDOffDelay = defualtLEDDelay; // LED off time. Initialized to 2999680 us (3s - 320us), 320us comes from sensor LED on delay + read delay
@@ -60,8 +56,6 @@ long LEDOffDelay = defualtLEDDelay; // LED off time. Initialized to 2999680 us (
 /*Bluetooth send out string*/
 char serialPM[STRINGSIZE] = {0};
 
-//average voltage of the 3 PM sensors
-float avgAnalog;
 
 //median array index counter
 int medianArrayLength = 5;
@@ -72,12 +66,16 @@ int windowSize = 10;
 int windowIndex = 0;
 
 /*Arrays used to find median*/
-float PMMedianArray[5];
+float PM1MedianArray[5];
+float PM2MedianArray[5];
+float PM3MedianArray[5];
 float TempMedianArray[5];
 float HumidMedianArray[5];
 
 /*arays used to calculate moving */
-float PMWindowArray[10];
+float PM1WindowArray[10];
+float PM2WindowArray[10];
+float PM3WindowArray[10];
 float TempWindowArray[10];
 float HumidWindowArray[10];
 float weightFactor = 0.5;
@@ -89,6 +87,12 @@ float tempFactor = 0.0031; //0.0031
 float humidFactor = 0.00064; //0.00064
 float tempReference = 2;
 float humidReference = 12;
+
+/*filtered and compensated PM values*/
+float roughPM1 = 0;
+float roughPM2 = 0;
+float roughPM3 = 0;
+float finalPM = 0;
 
 
 /*structure to store data*/
@@ -241,15 +245,18 @@ inline void updateReadInterval(){
 /*print values to serial port*/
 void printData(){
     //convert then store the read analog voltage to physical PM density for each sensor, print both values to serial port
+    Serial.print("Rough PM1= " + String(roughPM1) + "ug/m3 ");
+    Serial.print("Rough PM2 = " + String(roughPM1) + "ug/m3 ");
+    Serial.println("Rough PM3 = " + String(roughPM1) + "ug/m3 ");
+
     for (int i=1; i<4; i++){
-    Serial.print("PM" + String(i) + " Voltage = " + String(PMD.PMAnalog[i-1]) + "V ");
-    Serial.print("PM" + String(i) + " Density = " + String(PMD.PMPhys[i-1]) + "ug/m3 ");
+    //Serial.print("fine PM" + String(i) + " Voltage = " + String(PMD.PMAnalog[i-1]) + "V ");
+    Serial.print("fine PM" + String(i) + " Density = " + String(PMD.PMPhys[i-1]) + "ug/m3 ");
     }
     Serial.println("");
-    Serial.println("Rough PM = " + String(roughPM) + "ug/m3 ");
-    Serial.println("Fine PM = " + String(finePM) + "ug/m3 ");  
     Serial.println("");
-    Serial.println("");
+
+
 }
 
 
@@ -257,28 +264,36 @@ void printData(){
 inline void serialize(){
   bool flag = false;
   String realtime = String(myRTC.getYear()) + "." + String(myRTC.getMonth(flag)) + "."+ String(myRTC.getDate()) + "  "+ String(myRTC.getHour(flag,flag))+":"+String(myRTC.getMinute())+":"+String(myRTC.getSecond());
-  sprintf(serialPM,"%f",roughPM);
-  //Serial.println("hello");
-  //Serial.println(realtime);
+  for (int i=0; i<3; i++){
+    sprintf(serialPM,"%f",PMD.PMPhys[i]);
+  }
+  
   sd.time = realtime;
-  sd.PMvalue = finePM;
+  sd.PMvalue = finalPM;
 }
 
 
 /*algorithm for PM conversion*/
 void calcPM(){
 
-  roughPM = float(avgAnalog*aFactor - bIntercept);
+
+  roughPM1 = float(PMD.PMAnalog[0]*aFactor - bIntercept);
+  roughPM2 = float(PMD.PMAnalog[1]*aFactor - bIntercept);
+  roughPM3 = float(PMD.PMAnalog[2]*aFactor - bIntercept);
   
   //0.0031 (V/celcius) is the temperature factor that converts temp diff to a voltage diff, the value came from reference[2]
   //0.00064 (V/RH%) is the humidity factor that converts humidity diff to a voltage diff, the value came from refernece[2]
   //24 is the base temperature (from reference[2] based on our intepretation)
   //30 is the base relative humidity (from reference[2] based on our intepretation)
-  finePM =  float(aFactor*(avgAnalog + tempFactor*(PMD.temp - tempReference) + humidFactor*(PMD.humid - humidReference))- bIntercept);
+  for (int i=0; i<3; i++){
+    PMD.PMPhys[i] =  float(aFactor*(PMD.PMAnalog[i] + tempFactor*(PMD.temp - tempReference) + humidFactor*(PMD.humid - humidReference))- bIntercept);
+  }
+
+  /*merge results over here*/
+    //final PM = ;
 
   serialize();
   printData();
-  avgAnalog = 0;
 }
 
 
@@ -392,38 +407,39 @@ void sense(){
     }
 
     //convert ADC reading to voltage
-    for(int i = 0; i < 3; i++){
-    PMD.PMAnalog[i] = PMD.PMAnalog[i]/4096*5;
-    avgAnalog += PMD.PMAnalog[i];
+    PM1MedianArray[medianIndex] = PMD.PMAnalog[0]/4096*5;
+    PM2MedianArray[medianIndex] = PMD.PMAnalog[1]/4096*5;
+    PM3MedianArray[medianIndex] = PMD.PMAnalog[2]/4096*5;
 
-    PMD.PMPhys[i] = float(PMD.PMAnalog[i]*aFactor - bIntercept);
-    }
-
-    //get the average voltage of the 3 PM sensors
-    avgAnalog = avgAnalog/3;
-
-    //update the arrays used to find medians
-    PMMedianArray[medianIndex] = avgAnalog;
+    //update the arrays for temperature and humidity
     TempMedianArray[medianIndex] = PMD.temp;
     HumidMedianArray[medianIndex] = PMD.humid;
 
-    Serial.print("sensed PM voltage (AVG)= " + String(avgAnalog) + "V ");
+    Serial.print("sensed PM 1 voltage = " + String(PM1MedianArray[medianIndex]) + "V ");
+    Serial.print("sensed PM 2 voltage = " + String(PM2MedianArray[medianIndex]) + "V ");
+    Serial.println("sensed PM 3 voltage = " + String(PM3MedianArray[medianIndex]) + "V ");
     Serial.print("sensed temperature = " + String(PMD.temp) + "C ");
     Serial.print("sensed humidity = " + String(PMD.humid) + "% ");
     Serial.println("");
     
     //find the medians
     if (medianIndex >= medianArrayLength-1){
-      quickSort(PMMedianArray,0, medianArrayLength-1);
+      quickSort(PM1MedianArray,0, medianArrayLength-1);
+      quickSort(PM2MedianArray,0, medianArrayLength-1);
+      quickSort(PM3MedianArray,0, medianArrayLength-1);
       quickSort(TempMedianArray,0, medianArrayLength-1);
       quickSort(HumidMedianArray,0, medianArrayLength-1);
 
-      avgAnalog = PMMedianArray[2];
-      PMD.temp = TempMedianArray[2];
-      PMD.humid = HumidMedianArray[2];
+      PMD.PMAnalog[0] = PM1MedianArray[(medianArrayLength-1)/2];
+      PMD.PMAnalog[1] = PM2MedianArray[(medianArrayLength-1)/2];
+      PMD.PMAnalog[2] = PM3MedianArray[(medianArrayLength-1)/2];
+      PMD.temp = TempMedianArray[(medianArrayLength-1)/2];
+      PMD.humid = HumidMedianArray[(medianArrayLength-1)/2];
 
-      Serial.println("");
-      Serial.print("Median PM voltage = " + String(avgAnalog) + "V ");
+
+      Serial.print("Median PM1 voltage = " + String(PMD.PMAnalog[0]) + "V ");
+      Serial.print("Median PM2 voltage = " + String(PMD.PMAnalog[1]) + "V ");
+      Serial.print("Median PM3 voltage = " + String(PMD.PMAnalog[2]) + "V ");
       Serial.print("Median temperature = " + String(PMD.temp) + "C ");
       Serial.print("Median humidity = " + String(PMD.humid) + "% ");
       Serial.println("");
@@ -432,7 +448,9 @@ void sense(){
       //update the moving average window,if the number of data is < 10, skip the filtering process
       if (windowIndex < windowSize-1){
 
-        PMWindowArray[windowIndex] = avgAnalog;
+        PM1WindowArray[windowIndex] = PMD.PMAnalog[0];
+        PM2WindowArray[windowIndex] = PMD.PMAnalog[1];
+        PM3WindowArray[windowIndex] = PMD.PMAnalog[2];
         TempWindowArray[windowIndex] = PMD.temp;
         HumidWindowArray[windowIndex] = PMD.humid;
 
@@ -442,48 +460,47 @@ void sense(){
       //if the number of data >= 10
       else{
         //shift all elements left by 1 in the window
-        float PMSum = 0;
+        float PM1Sum = 0;
+        float PM2Sum = 0;
+        float PM3Sum = 0;
         float TempSum = 0;
         float HumidSum = 0;
 
         for (int i = 1; i <= windowSize; i++){
-          PMWindowArray[i-1] = PMWindowArray[i];
+          PM1WindowArray[i-1] = PM1WindowArray[i];
+          PM2WindowArray[i-1] = PM2WindowArray[i];
+          PM3WindowArray[i-1] = PM3WindowArray[i];
           TempWindowArray[i-1] = TempWindowArray[i];
           HumidWindowArray[i-1] = HumidMedianArray[i];
         }
 
         //update the window's last element by current reading
-        PMWindowArray[windowSize-1] = avgAnalog;
+        PM1WindowArray[windowSize-1] = PMD.PMAnalog[0];
+        PM2WindowArray[windowSize-1] = PMD.PMAnalog[1];
+        PM3WindowArray[windowSize-1] = PMD.PMAnalog[2];
         TempWindowArray[windowSize-1] = PMD.temp;
         HumidWindowArray[windowSize-1] = PMD.humid;
 
         //calculate the sum of the previous 9 values
         for (int j = 0; j < windowSize-1; j++){
-          //Serial.print(String(PMWindowArray[j]) + "  ");
-          PMSum += PMWindowArray[j];
+          PM1Sum += PM1WindowArray[j];
+          PM2Sum += PM2WindowArray[j];
+          PM3Sum += PM3WindowArray[j];
           TempSum += TempWindowArray[j];
           HumidSum += HumidWindowArray[j];
         }
 
-        /*
-        Serial.print("PM sum = " + String(PMSum) + "V ");
-        Serial.print("temp sum = " + String(TempSum) + "C ");
-        Serial.print("humid sum = " + String(HumidSum) + "% ");
-        Serial.println("");
-
-        Serial.print("current PM = " + String(PMWindowArray[windowSize-1]) + "V ");
-        Serial.print("current temp = " + String(TempWindowArray[windowSize-1]) + "C ");
-        Serial.print("current humid = " + String(HumidWindowArray[windowSize-1]) + "% ");
-        Serial.println("");
-        */
-
       //calculate the moving avg
-        avgAnalog = float((PMWindowArray[windowSize-1]*weightFactor)+((PMSum/float(windowSize-1))*(1-weightFactor)));
+        PMD.PMAnalog[0] = float((PM1WindowArray[windowSize-1]*weightFactor)+((PM1Sum/float(windowSize-1))*(1-weightFactor)));
+        PMD.PMAnalog[1] = float((PM2WindowArray[windowSize-1]*weightFactor)+((PM2Sum/float(windowSize-1))*(1-weightFactor)));
+        PMD.PMAnalog[2] = float((PM3WindowArray[windowSize-1]*weightFactor)+((PM3Sum/float(windowSize-1))*(1-weightFactor)));
         PMD.temp = float((TempWindowArray[windowSize-1]*weightFactor)+(TempSum/float(windowSize-1))*(1-weightFactor));
         PMD.humid = float((HumidWindowArray[windowSize-1]*weightFactor)+(HumidSum/float(windowSize-1))*(1-weightFactor));
 
       Serial.println("");
-      Serial.print("filtered PM voltage = " + String(avgAnalog) + "V ");
+      Serial.print("filtered PM1 voltage = " + String(PMD.PMAnalog[0]) + "V ");
+      Serial.print("filtered PM2 voltage = " + String(PMD.PMAnalog[1]) + "V ");
+      Serial.print("filtered PM3 voltage = " + String(PMD.PMAnalog[2]) + "V ");
       Serial.print("filtered temperature = " + String(PMD.temp) + "C ");
       Serial.print("filtered humidity = " + String(PMD.humid) + "% ");
       Serial.println("");
@@ -534,7 +551,6 @@ void loop() {
           //send data out to smartphone
           sense();
           sendData();
-          roughPM = 0;
           Serial.println("");
         }
       }
@@ -545,12 +561,10 @@ void loop() {
     else{
       sense();
       sendData();
-      roughPM = 0;
       //Serial.println("");
       //Serial.println("Central not connected");
     }
 
     LEDOffDelay = defualtLEDDelay;
-    roughPM = 0; 
 
 }
