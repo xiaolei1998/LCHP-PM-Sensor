@@ -55,6 +55,12 @@
             android:name=".AlertModeActivity"
             android:exported="true"/>
         <activity
+            android:name=".graphDataActivity"
+            android:exported="true"/>
+        <activity
+            android:name=".graphSumActivity"
+            android:exported="true"/>
+        <activity
             android:name=".DataListActivity"
             android:exported="true"/>
         <activity

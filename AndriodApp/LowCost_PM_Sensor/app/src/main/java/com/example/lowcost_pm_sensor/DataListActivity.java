@@ -1,8 +1,11 @@
 package com.example.lowcost_pm_sensor;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.service.autofill.Dataset;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -84,6 +87,16 @@ public class DataListActivity extends AppCompatActivity {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 System.out.println("Read Data Failed");
+            }
+        });
+
+        DataSetListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                DataSet dataS = DataSetList.get(i);
+                Intent intent = new Intent(DataListActivity.this, graphDataActivity.class);
+                intent.putExtra("DataSet",dataS);
+                startActivity(intent);
             }
         });
 

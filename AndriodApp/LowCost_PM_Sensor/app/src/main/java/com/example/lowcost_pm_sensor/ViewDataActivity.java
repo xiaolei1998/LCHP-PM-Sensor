@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 
 import androidx.annotation.NonNull;
@@ -30,17 +31,22 @@ public class ViewDataActivity extends AppCompatActivity {
     ListView DataSetTimeListView;
     ArrayAdapter<String> DataSetTimeAdapter;
     ArrayList<String> DataSetTimeList;
+    Button graph_sum;
 
 
     private FirebaseAuth authentication;
     private String uid; // unique id for each user
     private String Time_Onclick;
+    private ArrayList<DataSet> DataSetList;
+    private ArrayList AvgList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_viewdata);
 
+
+        graph_sum = findViewById(R.id.graph_sum_btn);
 
         String Mode = getIntent().getExtras().getString("Mode");
         if (Mode.equals("Offline")){
@@ -93,26 +99,48 @@ public class ViewDataActivity extends AppCompatActivity {
                 }
             });
 
-
-
-
         }
 
+        DataSetList = new ArrayList<DataSet>();
+        AvgList = new ArrayList<>();
+        graph_sum.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                for (int i=0; i<DataSetTimeList.size();i++){
+                    DatabaseReference reference1 = FirebaseDatabase.getInstance().getReference().child(uid).child("Datasets").child(DataSetTimeList.get(i));
+                    reference1.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            for (DataSnapshot dataSnapshot : snapshot.getChildren()){
+                                for (DataSnapshot snap : dataSnapshot.getChildren()) {
+                                    DataSet dataS = (DataSet) snap.getValue(DataSet.class);
+                                    DataSetList.add(dataS);
+                                }
+                            }
+                            double sum = 0;
+                            for (int n=0;n<DataSetList.size();n++){
+                                sum += DataSetList.get(n).getAvg();
+                                System.out.println(DataSetList.get(n).getDatasetName());
+                            }
+                            double TotalAvg = sum/DataSetList.size();
+                            AvgList.add(TotalAvg);
+                            DataSetList.clear();
 
+                        }
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            System.out.println("Read Data Failed");
+                        }
+                    });
+                }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+                Intent intent = new Intent(ViewDataActivity.this, graphSumActivity.class);
+                intent.putExtra("AvgList",AvgList);
+                intent.putExtra("TimeList",DataSetTimeList);
+                startActivity(intent);
+                AvgList.clear();
+            }
+        });
 
 
 

@@ -40,7 +40,23 @@
             android:layout_above="@id/bottom_navigation_event"
             android:clickable="true"
             android:enabled="true" />
+
     </LinearLayout>
+
+    <Button
+        android:id="@+id/graph_sum_btn"
+        android:layout_width="150dp"
+        android:layout_height="90dp"
+        android:layout_marginTop="200dp"
+        android:background="@drawable/round_button"
+        android:textAllCaps="false"
+        app:backgroundTint="@color/moegi"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="66dp"
+        android:text="Generate Graph"
+        android:layout_gravity="bottom"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         xmlns:app="http://schemas.android.com/apk/res-auto"

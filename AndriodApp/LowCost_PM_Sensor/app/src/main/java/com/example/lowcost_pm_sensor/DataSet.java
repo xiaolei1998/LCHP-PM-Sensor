@@ -1,8 +1,9 @@
 package com.example.lowcost_pm_sensor;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class DataSet {
+public class DataSet implements Serializable {
     private List<String> Data;
     private List<String> Time;
     private String DatasetName;
@@ -48,4 +49,15 @@ public class DataSet {
     public void setFrequency(String frequency) {
         Frequency = frequency;
     }
+
+    public double getAvg(){
+        double sum = 0;
+        for(int i = 0; i<Data.size();i++){
+            sum += Double.parseDouble(Data.get(i));
+        }
+        double Avg = sum/Data.size();
+
+        return Avg;
+    }
+
 }
