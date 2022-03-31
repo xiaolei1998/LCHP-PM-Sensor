@@ -32,6 +32,7 @@ public class ViewDataActivity extends AppCompatActivity {
     ArrayAdapter<String> DataSetTimeAdapter;
     ArrayList<String> DataSetTimeList;
     Button graph_sum;
+    Button csv_btn;
 
 
     private FirebaseAuth authentication;
@@ -47,6 +48,7 @@ public class ViewDataActivity extends AppCompatActivity {
 
 
         graph_sum = findViewById(R.id.graph_sum_btn);
+        csv_btn = findViewById(R.id.load_csv);
 
         String Mode = getIntent().getExtras().getString("Mode");
         if (Mode.equals("Offline")){
@@ -139,6 +141,14 @@ public class ViewDataActivity extends AppCompatActivity {
                 intent.putExtra("TimeList",DataSetTimeList);
                 startActivity(intent);
                 AvgList.clear();
+            }
+        });
+
+        csv_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent3 = new Intent(ViewDataActivity.this, ReadcsvActivity.class);
+                startActivity(intent3);
             }
         });
 

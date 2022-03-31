@@ -58,6 +58,21 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <Button
+        android:id="@+id/load_csv"
+        android:layout_width="150dp"
+        android:layout_height="90dp"
+        android:layout_marginTop="200dp"
+        android:background="@drawable/round_button"
+        android:textAllCaps="false"
+        app:backgroundTint="@color/moegi"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="66dp"
+        android:text="Load CSV"
+        android:layout_gravity="bottom"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
     <com.google.android.material.bottomnavigation.BottomNavigationView
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/bottom_navigation_event"

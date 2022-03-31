@@ -58,6 +58,9 @@
             android:name=".graphDataActivity"
             android:exported="true"/>
         <activity
+            android:name=".ReadcsvActivity"
+            android:exported="true"/>
+        <activity
             android:name=".graphSumActivity"
             android:exported="true"/>
         <activity
