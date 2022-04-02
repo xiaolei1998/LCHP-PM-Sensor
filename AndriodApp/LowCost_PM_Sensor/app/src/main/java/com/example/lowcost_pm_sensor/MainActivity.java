@@ -83,6 +83,8 @@ public class MainActivity extends AppCompatActivity {
     // 特征标识（发送数据） Frequency
     private final UUID mCharacteristicUUID_freq = UUID.fromString("36612c92-80ea-11ec-a8a3-0242ac120002");
     // 描述标识 -- check with group
+    private final UUID mCharacteristicUUID_RTC = UUID.fromString("f37e1b98-afdc-11ec-b909-0242ac120002");
+
     private final UUID mConfigUUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
 
@@ -197,6 +199,8 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             Freq = input.getText().toString();
+
+
                         }
                     });
                     builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -549,11 +553,19 @@ public class MainActivity extends AppCompatActivity {
                             //obtain characteristic
                             BluetoothGattCharacteristic gattCharacteristic = gattService.getCharacteristic(mCharacteristicUUID_pm);
                             setBluetoothGattNotification(mBluetoothGatt, gattCharacteristic, true);
+
+
+                            BluetoothGattCharacteristic gattFreq = gattService.getCharacteristic(mCharacteristicUUID_freq);
+                            setBluetoothGattNotification(mBluetoothGatt, gattFreq, true);
+
+
                             //获取特定特征成功
                             if (gattCharacteristic != null) {
                                 readCharacteristicArrayList.add(gattCharacteristic);
-                                writeCharacteristicArrayList.add(gattCharacteristic);
                                 notifyCharacteristicArrayList.add(gattCharacteristic);
+                            }
+                            if (gattFreq != null){
+                                writeCharacteristicArrayList.add(gattFreq);
                             }
                         }
                     }
@@ -581,6 +593,7 @@ public class MainActivity extends AppCompatActivity {
         public void onDescriptorWrite(BluetoothGatt gatt,
                                       BluetoothGattDescriptor descriptor, int status) {
             Log.i(TAG,"onDescriptorWrite");
+
         }
 
         @Override
@@ -619,10 +632,14 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
             //mBluetoothGatt.readRemoteRssi()调用得到，rssi即信号强度，做防丢器时可以不断使用此方法得到最新的信号强度，从而得到距离。
+
+
         }
 
-        public void onCharacteristicWrite(BluetoothGatt gatt,BluetoothGattCharacteristic characteristic, int status) {
+        public void onCharacteristicWrite(BluetoothGatt gatt,BluetoothGattCharacteristic gattFreq, int status) {
 
+            gattFreq.setValue(Freq);
+            mBluetoothGatt.writeCharacteristic(gattFreq);
             System.out.println("--------write success----- status:" + status);
         }
     };
