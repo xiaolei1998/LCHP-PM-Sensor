@@ -399,8 +399,6 @@ void calcPM(){
 #endif
 
 
-  
-  //最后需要放开展示，关闭为了采集数据集
   Serial.print("the final PM after learning is:  ");
   Serial.print(finalPM);
   Serial.println("    ug/m3");
@@ -492,17 +490,10 @@ void filter(){
         PMD.humid = float((HumidWindowArray[windowSize-1]*weightFactor)+(HumidSum/float(windowSize-1))*(1-weightFactor));
 
 
-        // Serial.println("");
-        // Serial.print("filtered PM1 low ratio = " + String(PMD.PMAnalog[0]) + "%  ");
-        // Serial.print("filtered PM2 low ratio = " + String(PMD.PMAnalog[1]) + "%  ");
-        // Serial.print("filtered PM3 low ratio = " + String(PMD.PMAnalog[2]) + "%  ");
-        // Serial.print("filtered temperature = " + String(PMD.temp) + "c   ");
-        // Serial.print("filtered humidity = " + String(PMD.humid) + "%");
-        // Serial.println("");
 
         gen_data_set();
         calcPM();
-        //SD_write();    //关闭为了采集数据
+
 
       }
 
@@ -554,12 +545,6 @@ void sense(){
       ratio3 = lowpulseoccupancy3/(sampletime_ms*10.0);  // Integer percentage 0=>100
       concentration2 = 1.1*pow(ratio2,3)-3.8*pow(ratio2,2)+520*ratio2+0.62; 
 
-      // Serial.print("concentration1 = ");
-      // Serial.print(concentration1);
-      // Serial.print(" pcs/0.01cf  -  ");
-      // Serial.print("concentration2 = ");
-      // Serial.print(concentration2);
-      // Serial.println(" pcs/0.01cf  -  ");
         
       lowpulseoccupancy1 = 0;
       lowpulseoccupancy2 = 0;
@@ -589,11 +574,11 @@ void sense(){
 #if defined(MODULE_USE_CONCENTRATION) || defined(MODULE_USE_CONCENTRATION_WO_TEMPHUM)
   PM1MedianArray[medianIndex] = concentration1;
   PM2MedianArray[medianIndex] = concentration2;
-  PM3MedianArray[medianIndex] = concentration2;   //记得新sensor来了之后给改了！！！！！！！
+  PM3MedianArray[medianIndex] = concentration2; 
 #else
   PM1MedianArray[medianIndex] = ratio1;
   PM2MedianArray[medianIndex] = ratio2;
-  PM3MedianArray[medianIndex] = ratio2;   //记得新sensor来了之后给改了！！！！！！！
+  PM3MedianArray[medianIndex] = ratio2;   
 #endif
 
 
